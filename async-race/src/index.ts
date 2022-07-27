@@ -1,1 +1,7 @@
-console.log('Oh sh*t, Here we go again!');
+import './index.scss';
+import App from './app';
+
+window.onload = () => {
+  const app = new App();
+  app.run();
+};
