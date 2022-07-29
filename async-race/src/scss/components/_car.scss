@@ -1,0 +1,88 @@
+.car {
+  width: 100%;
+  height: fit-content;
+  padding-bottom: 10px;
+  &__controls {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    gap: 15px;
+  }
+  &__container {
+    width: 100%;
+    height: 100%;
+    background-color: #1f2937;
+    display: flex;
+    border-bottom: 6px dashed $black;
+  }
+  &__button--select,
+  &__button--remove {
+    width: 90px;
+    height: 100%;
+    background-color: $white;
+    border: 1px solid $black;
+    border-radius: 2px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    cursor: pointer;
+    &:hover {
+      background-color: $black;
+      color: $white;
+    }
+  }
+  &__title {
+    width: fit-content;
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: $black;
+  }
+  &__button-container {
+    display: flex;
+    width: 80px;
+    flex-direction: column;
+  }
+  &__button--start,
+  &__button--stop {
+    border: 1px solid $black;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 100%;
+    background-color: $white;
+    color: $black;
+    cursor: pointer;
+    &:hover {
+      background-color: $black;
+      color: $white;
+    }
+  }
+  &__wrapper {
+    display: flex;
+    width: 100px;
+    height: 60px;
+    align-items: flex-end;
+  }
+  &__model {
+    display: flex;
+    width: 80px;
+    height: 30px;
+    align-items: center;
+    svg {
+      width: 100px;
+      height: 50px;
+    }
+  }
+  &__finish-line {
+    position: absolute;
+    right: 100px;
+    width: 30px;
+    height: 60px;
+  }
+}
