@@ -10,38 +10,44 @@ class App {
   private static header: Header = new Header('header', 'header');
   private static footer: Footer = new Footer('footer', 'footer');
 
-  static renderNewPage(idPage: string) {
+  static renderNewPage(idPage: string): void {
     if (App.url) {
       App.url = null;
     }
     let page: Page | null = null;
 
-    if (idPage === PageIds.Garage) {
-      page = new Garage(idPage);
-      App.url = idPage;
-    } else if (idPage === PageIds.Winners) {
-      page = new Winners(idPage);
-      App.url = idPage;
-    } else {
-      page = new ErrorPage(idPage, ErrorTypes.Error_404);
-      App.url = idPage;
+    switch (idPage) {
+      case PageIds.Garage:
+        page = new Garage(idPage);
+        App.url = idPage;
+        break;
+      case PageIds.Winners:
+        page = new Winners(idPage);
+        App.url = idPage;
+        break;
+      default:
+        page = new ErrorPage(idPage, ErrorTypes.Error_404);
+        App.url = idPage;
+        break;
     }
 
     if (page) {
-      const pageHTML = page.render();
-      App.url = PageIds.Default;
-      App.main.rerender().append(pageHTML);
+      (async () => {
+        const pageHTML = await page.render();
+        App.url = PageIds.Default;
+        App.main.rerender().append(pageHTML);
+      })();
     }
   }
 
-  private enableRouteChange() {
+  private enableRouteChange(): void {
     window.addEventListener('hashchange', () => {
       const hash = window.location.hash.slice(1);
       App.renderNewPage(hash);
     });
   }
 
-  generatePage() {
+  generatePage(): void {
     const wrapper = document.createElement('div');
     wrapper.classList.add('page-wrapper');
     wrapper.append(App.header.render());
@@ -50,7 +56,7 @@ class App {
     App.body.append(wrapper);
   }
 
-  run() {
+  run(): void {
     this.generatePage();
     this.enableRouteChange();
     App.renderNewPage(PageIds.Garage);

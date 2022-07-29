@@ -1,6 +1,5 @@
 abstract class Page {
   protected container: HTMLElement;
-  static TextObject = {};
 
   constructor(id: string) {
     this.container = document.createElement('div');
@@ -14,7 +13,7 @@ abstract class Page {
     return headerTitle;
   }
 
-  render() {
+  async render(): Promise<HTMLElement> {
     return this.container;
   }
 }

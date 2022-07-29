@@ -18,7 +18,6 @@ class Footer extends Component {
     footerContent.classList.add('footer__contacts');
     const contactsItem = document.createElement('li');
     contactsItem.classList.add('footer__contacts-item');
-
     footerContent.append(contactsItem);
     this.container.append(footerContent);
     this.enableListenersOnButton(contactsItem);

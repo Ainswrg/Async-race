@@ -5,7 +5,7 @@ class Winners extends Page {
     MainTitle: 'Winners Page',
   };
 
-  render() {
+  async render(): Promise<HTMLElement> {
     const title = this.createHeaderTitle(Winners.TextObject.MainTitle);
     this.container.append(title);
     return this.container;

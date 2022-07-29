@@ -13,7 +13,7 @@ class ErrorPage extends Page {
     this.errorType = errorType;
   }
 
-  render() {
+  async render(): Promise<HTMLElement> {
     const title = this.createHeaderTitle(ErrorPage.TextObject[this.errorType]);
     this.container.append(title);
     return this.container;

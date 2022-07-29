@@ -42,6 +42,11 @@ const baseConfig = {
   resolve: {
     extensions: ['.ts', '.js'],
     plugins: [new TsconfigPathsPlugin()],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@db': path.resolve(__dirname, 'src/db'),
+      '@assets': path.resolve(__dirname, 'src/assets'),
+    }
   },
   output: {
     filename: 'index.[contenthash].js',
