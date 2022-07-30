@@ -1,0 +1,25 @@
+.garage {
+  width: 100%;
+  height: fit-content;
+  background-color: #94a3b8;
+  &__title {
+    width: fit-content;
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: $black;
+  }
+  &__page-title {
+    width: fit-content;
+    height: 100%;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: $black;
+  }
+}

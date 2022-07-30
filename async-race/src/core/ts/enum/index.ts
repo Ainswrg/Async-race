@@ -4,6 +4,11 @@ const enum PageIds {
   Default = 'current-page',
 }
 
+const enum Endpoint {
+  garage = 'garage',
+  winners = 'winners',
+}
+
 const enum ErrorTypes {
   Error_404 = 404,
 }
@@ -12,4 +17,4 @@ const enum Url {
   school = 'https://rs.school/',
 }
 
-export { PageIds, ErrorTypes, Url };
+export { PageIds, ErrorTypes, Url, Endpoint };
