@@ -1,7 +1,7 @@
 import Page from '@core/templates/page';
 import { ErrorTypes, PageIds } from '@core/ts/enum';
 import { Main, Header, Footer } from '@core/layouts';
-import { Garage, Winners, ErrorPage } from '@pages/index';
+import { GaragePage, WinnersPage, ErrorPage } from '@pages/index';
 
 class App {
   private static body: HTMLElement = document.body;
@@ -18,11 +18,11 @@ class App {
 
     switch (idPage) {
       case PageIds.Garage:
-        page = new Garage(idPage);
+        page = new GaragePage(idPage);
         App.url = idPage;
         break;
       case PageIds.Winners:
-        page = new Winners(idPage);
+        page = new WinnersPage(idPage);
         App.url = idPage;
         break;
       default:
