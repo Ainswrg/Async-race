@@ -1,8 +1,13 @@
 interface ICar {
   name: string;
-  id: string;
+  id?: string;
   color: string;
 }
+interface ICarRandomGenerate {
+  generateRandomCar: () => string;
+  generateRandomColor: () => string;
+  generateCar: () => ICar;
+  generateOneHundredCars: () => ICar[];
+}
 
-// eslint-disable-next-line import/prefer-default-export
-export { ICar };
+export { ICar, ICarRandomGenerate };
