@@ -1,4 +1,5 @@
-import { TGetCars } from '@core/ts/types';
+import { Endpoint } from '@core/ts/enum';
+import type { TGetCars } from '@core/ts/types';
 
 const BASE = 'http://localhost:3000';
 const enum Methods {
@@ -9,7 +10,7 @@ const enum Methods {
 }
 
 class Database {
-  getCars = async (endpoint: string, page: number, limit: number = 7): Promise<TGetCars> => {
+  getCars = async (endpoint: string, page: number | string, limit: number | string = 7): Promise<TGetCars> => {
     const response = await fetch(`${BASE}/${endpoint}?_page=${page}&_limit=${limit}`);
     return {
       items: await response.json(),
@@ -17,8 +18,13 @@ class Database {
     };
   };
 
+  getCar = async (id: string) => {
+    const response = await fetch(`${BASE}/${Endpoint.garage}/${id}`);
+    return response.json();
+  };
+
   createCar = async (name: string, color: string): Promise<void> => {
-    await fetch(`${BASE}/garage`, {
+    await fetch(`${BASE}/${Endpoint.garage}`, {
       method: Methods.POST,
       headers: {
         'Content-Type': 'application/json',
@@ -29,8 +35,8 @@ class Database {
       }),
     });
   };
-  updateCar = async (name: string, color: string): Promise<void> => {
-    await fetch(`${BASE}/garage`, {
+  updateCar = async (name: string, color: string, id: string): Promise<void> => {
+    await fetch(`${BASE}/${Endpoint.garage}/${id}`, {
       method: Methods.PUT,
       headers: {
         'Content-Type': 'application/json',
@@ -42,7 +48,7 @@ class Database {
     });
   };
   deleteCar = async (id: string): Promise<void> => {
-    await fetch(`${BASE}/garage/${id}`, {
+    await fetch(`${BASE}/${Endpoint.garage}/${id}`, {
       method: Methods.DELETE,
     });
   };
