@@ -1,3 +1,4 @@
-declare module '@/assets/images/finish-flag.png';
-declare module '@/assets/svg/car-02.svg';
-declare module '@/assets/';
+declare module '*png';
+declare module '*svg';
+declare module '@helpers/generateRandomCars';
+declare module '@helpers/paginate';

@@ -46,6 +46,7 @@ const baseConfig = {
       '@': path.resolve(__dirname, 'src'),
       '@db': path.resolve(__dirname, 'src/db'),
       '@assets': path.resolve(__dirname, 'src/assets'),
+      '@helpers': path.resolve(__dirname, 'src/helpers'),
     }
   },
   output: {
