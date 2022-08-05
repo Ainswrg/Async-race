@@ -59,6 +59,7 @@ class App {
   run(): void {
     this.generatePage();
     this.enableRouteChange();
+    window.location.hash = PageIds.Garage;
     App.renderNewPage(PageIds.Garage);
   }
 }
