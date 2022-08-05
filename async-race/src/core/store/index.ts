@@ -1,11 +1,24 @@
 import type { ICar } from '@core/ts/interfaces';
 import EventObserver from '@core/eventObserver';
 
-type TStore = ICar | HTMLDivElement | HTMLInputElement;
+interface IStateCar {
+  id: number;
+  end?: boolean | undefined;
+}
+
+type TStore = ICar | HTMLDivElement | HTMLInputElement | HTMLImageElement | HTMLElement | IStateCar;
 class Store {
   static event: Map<string, EventObserver<unknown>> = new Map();
   static store: Map<string, TStore> = new Map();
   static currentPage: number = 1;
+  static currentId: string = '1';
+
+  static getCurrentId(): string {
+    return Store.currentId;
+  }
+  static setCurrentId(id: string): void {
+    Store.currentId = id;
+  }
 
   static getCurrentPage(): number {
     return Store.currentPage;
@@ -24,8 +37,8 @@ class Store {
     return Store.store.get(key);
   }
 
-  static getEvent(): Map<string, EventObserver<unknown>> {
-    return Store.event;
+  static getFromEvent(key: string): EventObserver<unknown> | undefined {
+    return Store.event.get(key);
   }
   static addToEvent(key: string, value: EventObserver<unknown>) {
     Store.event.set(key, value);
