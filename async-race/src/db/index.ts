@@ -1,12 +1,13 @@
 import { Endpoint } from '@core/ts/enum';
 import type { TGetCars } from '@core/ts/types';
 
-const BASE = 'http://localhost:3000';
+const BASE = 'http://127.0.0.1:3000';
 const enum Methods {
   GET = 'GET',
   POST = 'POST',
   PUT = 'PUT',
   DELETE = 'DELETE',
+  PATCH = 'PATCH',
 }
 
 class Database {
@@ -51,6 +52,18 @@ class Database {
     await fetch(`${BASE}/${Endpoint.garage}/${id}`, {
       method: Methods.DELETE,
     });
+  };
+  startEngine = async (id: string, status: string) => {
+    const response = await fetch(`${BASE}/${Endpoint.engine}?id=${id}&status=${status}`, {
+      method: Methods.PATCH,
+    });
+    return response.json();
+  };
+  switchCarEngine = async (id: string, status: string): Promise<Response> => {
+    const response = await fetch(`${BASE}/${Endpoint.engine}?id=${id}&status=${status}`, {
+      method: Methods.PATCH,
+    });
+    return response;
   };
 }
 

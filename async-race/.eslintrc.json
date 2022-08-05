@@ -27,6 +27,7 @@
       "class-methods-use-this": "off",
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/lines-between-class-members": "off",
-      "import/no-dynamic-require": "off"
+      "import/no-dynamic-require": "off",
+      "max-lines-per-function": ["error", { "max": 40, "skipBlankLines": false, "skipComments": true }]
     }
 }
