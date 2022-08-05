@@ -7,10 +7,12 @@ import finish from '@assets/images/finish-flag.png';
 
 class Car extends Component {
   event: EventObserver<unknown>;
+  db: Database;
 
   constructor(tagName: string, className: string, event: EventObserver<unknown>) {
     super(tagName, className);
     this.event = event;
+    this.db = new Database();
   }
   generateButton(name: string, className: string): HTMLButtonElement {
     const button = document.createElement('button');
@@ -38,21 +40,38 @@ class Car extends Component {
   }
 
   async callbackEvent(id: string, variant: string): Promise<void> {
-    const event = Store.event.get('event');
+    const event = Store.getFromEvent('event');
     if (!event) throw new Error('Event is undefined');
-    const db = new Database();
-
-    if (variant === 'delete') {
-      await db.deleteCar(id);
-      event.notify('updateCars');
+    const car: ICar = await this.db.getCar(id);
+    if (!car) throw new Error('Car1 is undefined');
+    switch (variant) {
+      case 'delete':
+        await this.db.deleteCar(id);
+        event.notify('update');
+        break;
+      case 'select': {
+        Store.addToStore('car', car);
+        event.notify('updateInput');
+        break;
+      }
+      case 'start': {
+        Store.setCurrentId(id);
+        Store.addToStore('car', car);
+        event.notify('start');
+        break;
+      }
+      case 'stop': {
+        event.notify('stop');
+        break;
+      }
+      default:
     }
+  }
 
-    if (variant === 'select') {
-      const car: ICar = await db.getCar(id);
-      if (!car) throw new Error('Car1 is undefined');
-      Store.addToStore('car', car);
-      event.notify('updateInput');
-    }
+  getElement(key: string) {
+    const value = Store.getFromStore(key);
+    if (!value) throw new Error(`${key} is undefined`);
+    return value;
   }
 
   enableListenersOnButton(button: HTMLButtonElement, id: string, variant: string): void {
@@ -71,7 +90,7 @@ class Car extends Component {
     return img;
   }
 
-  generateCar(color: string): HTMLDivElement {
+  generateCar(color: string, id: number): HTMLDivElement {
     const container = document.createElement('div');
     container.classList.add('car__container');
 
@@ -80,13 +99,18 @@ class Car extends Component {
 
     const carStart = this.generateButton('Start', 'car__button--start');
     const carStop = this.generateButton('Stop', 'car__button--stop');
+    carStop.classList.add('car__button--disabled');
+    Store.addToStore(`carStop${id}`, carStop);
+    Store.addToStore(`carStart${id}`, carStart);
+
+    this.enableListenersOnButton(carStart, id.toString(), 'start');
+    this.enableListenersOnButton(carStop, id.toString(), 'stop');
 
     const carWrapper = document.createElement('div');
     carWrapper.classList.add('car__wrapper');
-
     const imgSvg = this.getCarImage(color);
 
-    const car = document.createElement('span');
+    const car = document.createElement('div');
     car.classList.add('car__model');
     car.innerHTML = imgSvg;
 
@@ -94,6 +118,8 @@ class Car extends Component {
     finishLine.classList.add('car__finish-line');
     finishLine.src = finish;
 
+    Store.addToStore(`carModel${id}`, car);
+    Store.addToStore(`carFinishLine${id}`, finishLine);
     buttonContainer.append(carStart, carStop);
     carWrapper.append(car, finishLine);
     container.append(buttonContainer, carWrapper);
@@ -102,7 +128,7 @@ class Car extends Component {
 
   renderCar(name: string, color: string, id: number): HTMLElement {
     const carControls = this.generateCarControls(name, id);
-    const car = this.generateCar(color);
+    const car = this.generateCar(color, id);
     this.container.append(carControls, car);
     return this.container;
   }

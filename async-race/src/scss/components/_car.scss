@@ -15,21 +15,27 @@
     display: flex;
     border-bottom: 6px dashed $black;
   }
-  &__button--select,
-  &__button--remove {
-    width: 90px;
-    height: 100%;
-    background-color: $white;
-    border: 1px solid $black;
-    border-radius: 2px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1.5rem;
-    cursor: pointer;
-    &:hover {
-      background-color: $black;
-      color: $white;
+  &__button {
+    &--select,
+    &--remove {
+      width: 90px;
+      height: 100%;
+      background-color: $white;
+      border: 1px solid $black;
+      border-radius: 2px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      &:hover {
+        background-color: $black;
+        color: $white;
+      }
+    }
+    &--disabled {
+      opacity: 0.5;
+      pointer-events: none;
     }
   }
   &__title {
