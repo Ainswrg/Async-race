@@ -1,3 +1,4 @@
+import { ICar } from '@core/ts/interfaces';
 import { Endpoint } from '@core/ts/enum';
 import type { TGetCars } from '@core/ts/types';
 
@@ -19,7 +20,7 @@ class Database {
     };
   };
 
-  getCar = async (id: string) => {
+  getCar = async (id: string): Promise<ICar> => {
     const response = await fetch(`${BASE}/${Endpoint.garage}/${id}`);
     return response.json();
   };
@@ -64,6 +65,45 @@ class Database {
       method: Methods.PATCH,
     });
     return response;
+  };
+  getWinners = async (page: number | string, limit: number | string = 10): Promise<TGetCars> => {
+    const response = await fetch(`${BASE}/${Endpoint.winners}?_page=${page}&_limit=${limit}`);
+    return {
+      items: await response.json(),
+      total: response.headers.get('X-Total-Count'),
+    };
+  };
+  getWinner = async (id: string): Promise<ICar> => {
+    const response = await fetch(`${BASE}/${Endpoint.winners}/${id}`);
+    return response.json();
+  };
+  updateWinner = async (id: string, body: { wins: number; time: number }): Promise<ICar> => {
+    const response = await fetch(`${BASE}/${Endpoint.winners}/${id}`, {
+      method: Methods.PUT,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    return response.json();
+  };
+  deleteWinner = async (id: string): Promise<void> => {
+    await fetch(`${BASE}/${Endpoint.winners}/${id}`, {
+      method: Methods.DELETE,
+    });
+  };
+  createWinner = async (id: number, wins: number, time: number): Promise<void> => {
+    await fetch(`${BASE}/${Endpoint.winners}`, {
+      method: Methods.POST,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id,
+        wins,
+        time,
+      }),
+    });
   };
 }
 
