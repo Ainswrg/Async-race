@@ -227,6 +227,17 @@ class Garage extends Component {
         if (state?.finish && isNotFinished) {
           this.generateModal(car.name, state?.time);
           isNotFinished = false;
+          const time = Number((state.time / 1000).toFixed(2));
+          const curCar = await this.db.getWinner(car.id);
+          if (curCar.id) {
+            if (!curCar.wins) throw new Error('Car wins is not defined');
+            if (!curCar.time) throw new Error('Car time is not defined');
+            const winsCount = curCar.wins + 1;
+            const lessesTime = curCar.time > time ? time : curCar.time;
+            await this.db.updateWinner(curCar.id, { wins: winsCount, time: lessesTime });
+          } else {
+            await this.db.createWinner(Number(car.id), 1, time);
+          }
         }
         return false;
       })

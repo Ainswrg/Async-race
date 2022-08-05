@@ -1,13 +1,10 @@
+import Winners from '@core/components/winners';
 import Page from '@core/templates/page';
 
 class WinnersPage extends Page {
-  static TextObject = {
-    MainTitle: 'Winners Page',
-  };
-
   async render(): Promise<HTMLElement> {
-    const title = this.createHeaderTitle(WinnersPage.TextObject.MainTitle);
-    this.container.append(title);
+    const winners = new Winners('div', 'winners');
+    this.container.append(await winners.renderWinners());
     return this.container;
   }
 }
