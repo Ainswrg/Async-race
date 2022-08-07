@@ -1,4 +1,4 @@
-import { Endpoint, DefaultConst, Pagination, Event } from '@core/ts/enum';
+import { DefaultConst, Pagination, Event } from '@core/ts/enum';
 import { ICar } from '@core/ts/interfaces';
 import Component from '@core/templates/component';
 import Database from '@db/index';
@@ -38,6 +38,17 @@ class GeneratorCar extends Component {
   async getCreateInterface(): Promise<HTMLElement> {
     const create = this.generateGeneratorCars('create');
     const db = new Database();
+    Store.addToStore('createInterface', create.divInput);
+    Store.addToStore('createTitle', create.inputForTitle);
+    Store.addToStore('createColor', create.inputForColor);
+    create.inputForTitle.addEventListener('input', () => {
+      sessionStorage.setItem(`${Pagination.garage}createTitle`, create.inputForTitle.value);
+    });
+    create.inputForColor.addEventListener('input', () => {
+      sessionStorage.setItem(`${Pagination.garage}createColor`, create.inputForColor.value);
+    });
+    create.inputForTitle.value = sessionStorage.getItem(`${Pagination.garage}createTitle`) ?? '';
+    create.inputForColor.value = sessionStorage.getItem(`${Pagination.garage}createColor`) ?? '';
 
     const event = Store.getFromEvent('event');
     if (event === undefined) throw new Error('Event is undefined');
@@ -63,21 +74,18 @@ class GeneratorCar extends Component {
     const carBefore = Store.getFromStore('car');
 
     const id = carBefore?.id || DefaultConst.defaultPage;
-
     update.button.addEventListener('click', async () => {
       await db.updateCar(update.inputForTitle.value, update.inputForColor.value, id.toString());
       event.notify(Event.update);
     });
-    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
-    const cars = await db.getCars(Endpoint.garage, currentPage);
-    cars.items.forEach((car) => {
-      if (car.id === id) {
-        update.inputForTitle.value = car?.name || '';
-        update.inputForColor.value = car?.color || '#000000';
-
-        Store.addToStore('car', car);
-      }
+    update.inputForTitle.addEventListener('input', () => {
+      sessionStorage.setItem(`${Pagination.garage}updateTitle`, update.inputForTitle.value);
     });
+    update.inputForColor.addEventListener('input', () => {
+      sessionStorage.setItem(`${Pagination.garage}updateColor`, update.inputForColor.value);
+    });
+    update.inputForTitle.value = sessionStorage.getItem(`${Pagination.garage}updateTitle`) ?? '';
+    update.inputForColor.value = sessionStorage.getItem(`${Pagination.garage}updateColor`) ?? '';
 
     return update.divInput;
   }
@@ -93,9 +101,13 @@ class GeneratorCar extends Component {
     const wrapper = document.createElement('div');
     wrapper.classList.add('car-generator__buttons');
 
-    const race = await this.enableListenerButton('race');
-    const reset = await this.enableListenerButton('reset');
+    const race = await this.enableListenerAndGenerateButton('race');
+    const reset = await this.enableListenerAndGenerateButton('reset');
+    reset.classList.add('car-generator__button--disabled');
     const generateCars = this.generateButton('generate cars');
+    Store.addToStore('race', race);
+    Store.addToStore('reset', reset);
+    Store.addToStore('generateCars', generateCars);
     this.generateRandomCars(generateCars);
     wrapper.append(race, reset, generateCars);
     return wrapper;
@@ -118,7 +130,7 @@ class GeneratorCar extends Component {
     });
   }
 
-  async enableListenerButton(name: string) {
+  async enableListenerAndGenerateButton(name: string) {
     const element = this.generateButton(name);
 
     element.addEventListener('click', async () => {

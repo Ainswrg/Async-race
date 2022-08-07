@@ -89,6 +89,7 @@ class Garage extends Component {
           break;
         case Event.race:
           this.isClickedRace = true;
+          this.toggleRaceResetButtons('all');
           await this.raceAllCar(dataCars.items);
           break;
         case Event.reset:
@@ -106,18 +107,26 @@ class Garage extends Component {
     });
   }
 
-  toggleEngineButton(id: string, variant: string): void {
+  toggleCarButtons(id: string, variant: string): void {
+    const select = this.getElement(`carSelect${id}`);
+    const remove = this.getElement(`carRemove${id}`);
     const carStopButton = this.getElement(`carStop${id}`);
     const carStartButton = this.getElement(`carStart${id}`);
     if (!(carStopButton instanceof HTMLButtonElement)) throw new Error('CarStopButton is not HTMLButtonElement');
     if (!(carStartButton instanceof HTMLButtonElement)) throw new Error('CarStartButton is not HTMLButtonElement');
+    if (!(select instanceof HTMLButtonElement)) throw new Error('SelectButton is not HTMLButtonElement');
+    if (!(remove instanceof HTMLButtonElement)) throw new Error('RemoveButton is not HTMLButtonElement');
 
     if (variant === 'start') {
       carStopButton.classList.remove('car__button--disabled');
       carStartButton.classList.add('car__button--disabled');
+      select.classList.add('car__button--disabled');
+      remove.classList.add('car__button--disabled');
     } else {
       carStopButton.classList.add('car__button--disabled');
       carStartButton.classList.remove('car__button--disabled');
+      select.classList.remove('car__button--disabled');
+      remove.classList.remove('car__button--disabled');
     }
   }
 
@@ -129,8 +138,28 @@ class Garage extends Component {
     }
     if (variant === 'disable') {
       update.classList.add('car-generator__wrapper--disabled');
-      this.clearInputsInUpdate();
     }
+  }
+  toggleCreateButton(variant: string) {
+    const create = Store.getFromStore('createInterface');
+    if (!create || !(create instanceof HTMLElement)) throw new Error('Create input is not HTMLElement');
+    if (variant === 'enable') {
+      create.classList.remove('car-generator__wrapper--disabled');
+    }
+    if (variant === 'disable') {
+      create.classList.add('car-generator__wrapper--disabled');
+    }
+  }
+
+  clearInputsInUpdate() {
+    const title = Store.getFromStore('updateTitle');
+    const color = Store.getFromStore('updateColor');
+
+    if (!title || !(title instanceof HTMLInputElement)) throw new Error('Title input is not HTMLInputElement');
+    if (!color || !(color instanceof HTMLInputElement)) throw new Error('Color input is not HTMLInputElement');
+
+    title.value = '';
+    color.value = '#000000';
   }
 
   togglePaginationButtons(variant: string) {
@@ -146,12 +175,15 @@ class Garage extends Component {
 
   toggleAllButtons(variant: string, id: string) {
     if (variant === 'enable') {
-      this.toggleEngineButton(id, 'stop');
+      this.toggleCarButtons(id, 'stop');
       this.togglePaginationButtons('enable');
+      this.toggleUpdateButton('enable');
+      this.toggleCreateButton('enable');
     } else {
-      this.toggleEngineButton(id, 'start');
+      this.toggleCarButtons(id, 'start');
       this.toggleUpdateButton('disable');
       this.togglePaginationButtons('disable');
+      this.toggleCreateButton('disable');
     }
   }
 
@@ -177,6 +209,7 @@ class Garage extends Component {
           } else {
             await this.db.createWinner(Number(car.id), 1, time);
           }
+          this.toggleRaceResetButtons('disable');
         }
         return false;
       })
@@ -185,14 +218,44 @@ class Garage extends Component {
     this.togglePaginationButtons('enable');
   }
 
-  resetAllCars(cars: ICar[]): Promise<PromiseSettledResult<void>[]> {
-    return Promise.allSettled(
+  async resetAllCars(cars: ICar[]): Promise<PromiseSettledResult<void>[]> {
+    const res = await Promise.allSettled(
       cars.map(async (car) => {
         if (car.id === undefined) throw new Error('Car id is not defined');
         const requestId = this.getElement(`carState${car.id}`);
         await this.resetCarOnStartPosition(Number(requestId.id), car.id);
       })
     );
+    this.toggleRaceResetButtons('enable');
+    return res;
+  }
+
+  toggleRaceResetButtons(variant: string) {
+    const race = Store.getFromStore('race');
+    const reset = Store.getFromStore('reset');
+    const generateCars = Store.getFromStore('generateCars');
+    if (
+      !(race instanceof HTMLButtonElement) ||
+      !(reset instanceof HTMLButtonElement) ||
+      !(generateCars instanceof HTMLButtonElement)
+    ) {
+      throw new Error('Reset or GenerateCars is not HTMLButtonElement');
+    }
+    if (variant === 'disable') {
+      race.classList.add('car-generator__button--disabled');
+      reset.classList.remove('car-generator__button--disabled');
+      generateCars.classList.add('car-generator__button--disabled');
+    }
+    if (variant === 'all') {
+      race.classList.add('car-generator__button--disabled');
+      reset.classList.add('car-generator__button--disabled');
+      generateCars.classList.add('car-generator__button--disabled');
+    }
+    if (variant === 'enable') {
+      race.classList.remove('car-generator__button--disabled');
+      reset.classList.add('car-generator__button--disabled');
+      generateCars.classList.remove('car-generator__button--disabled');
+    }
   }
 
   generateModal(carName: string, time: number): void {
@@ -208,12 +271,13 @@ class Garage extends Component {
   }
 
   async resetCarOnStartPosition(requestId: number, id: string) {
+    cancelAnimationFrame(requestId);
     await this.db.startEngine(id, Engine.stop);
     const carModel = this.getElement(`carModel${id}`);
     if (!(carModel instanceof HTMLElement)) throw new Error('CarModel is not HTMLDivElement');
-    cancelAnimationFrame(requestId);
     carModel.style.transform = 'translate(0px)';
     this.toggleAllButtons('enable', id);
+    this.toggleRaceResetButtons('enable');
   }
 
   getElement(key: string) {
@@ -224,6 +288,7 @@ class Garage extends Component {
 
   async startDrive(id: string, carState: { velocity: number; distance: number }): Promise<IStateCar> {
     this.toggleAllButtons('disable', id);
+    this.toggleRaceResetButtons('all');
     const { velocity, distance } = carState;
     const carModel = this.getElement(`carModel${id}`);
     const carFinishLine = this.getElement(`carFinishLine${id}`);
@@ -242,6 +307,7 @@ class Garage extends Component {
     if (!this.isClickedRace) {
       this.togglePaginationButtons('enable');
     }
+    this.toggleRaceResetButtons('disable');
     return res;
   }
 
@@ -253,7 +319,6 @@ class Garage extends Component {
 
   animationCar(car: HTMLElement, distance: number, animationTime: number) {
     let start: null | number = null;
-
     const res: IStateCar = {
       id: 0,
       time: 0,
@@ -298,6 +363,33 @@ class Garage extends Component {
     }
     generatorCar.innerHTML = '';
     generatorCar.append(await this.getGeneratorCars());
+    await this.updateInputs();
+  }
+
+  async updateInputs() {
+    const carBefore = Store.getFromStore('car');
+    const id = carBefore?.id || DefaultConst.defaultPage;
+    const updateTitle = Store.getFromStore('updateTitle');
+    const updateColor = Store.getFromStore('updateColor');
+    if (!updateTitle || !(updateTitle instanceof HTMLInputElement))
+      throw new Error('UpdateTitle is not HTMLDivElement');
+    if (!updateColor || !(updateColor instanceof HTMLInputElement))
+      throw new Error('UpdateColor is not HTMLDivElement');
+
+    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
+    const cars = await this.db.getCars(Endpoint.garage, currentPage);
+    cars.items.forEach((car) => {
+      if (car.id === id) {
+        const valueTitle = car.name ?? '';
+        const valueColor = car.color ?? '#000000';
+        updateColor.value = valueColor;
+        updateTitle.value = valueTitle;
+        sessionStorage.setItem(`${Pagination.garage}updateTitle`, updateTitle.value);
+        sessionStorage.setItem(`${Pagination.garage}updateColor`, updateColor.value);
+
+        Store.addToStore('car', car);
+      }
+    });
   }
 
   async rerenderPagination(): Promise<void> {
@@ -335,24 +427,19 @@ class Garage extends Component {
     };
   }
 
-  clearInputsInUpdate() {
-    const title = Store.getFromStore('updateTitle');
-    const color = Store.getFromStore('updateColor');
-
-    if (!title || !(title instanceof HTMLInputElement)) throw new Error('Title input is not HTMLInputElement');
-    if (!color || !(color instanceof HTMLInputElement)) throw new Error('Color input is not HTMLInputElement');
-
-    title.value = '';
-    color.value = '#000000';
-  }
-
   async renderGarage(): Promise<HTMLElement> {
     this.eventListener();
     const data = await this.appendAll(this.data, this.total);
     const { containerCar, generatorCar } = data;
     Store.addToStore('containerCar', containerCar);
     Store.addToStore('generatorCar', generatorCar);
-    this.toggleUpdateButton('disable');
+    const updateInput = Store.getFromStore('updateTitle');
+    const updateColor = Store.getFromStore('updateColor');
+    if (!(updateColor instanceof HTMLInputElement)) throw new Error('UpdateColor is not HTMLInputElement');
+    if (!(updateInput instanceof HTMLInputElement)) throw new Error('UpdateInput is not HTMLInputElement');
+    if (updateInput.value === '' && updateColor.value === '#000000') {
+      this.toggleUpdateButton('disable');
+    }
     return this.container;
   }
 }

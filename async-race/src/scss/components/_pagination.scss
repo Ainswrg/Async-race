@@ -13,9 +13,11 @@
   margin-top: 40px;
   margin-bottom: 40px;
   &--disabled {
-    background-color: $disabled;
-    color: $black;
-    pointer-events: none;
+    .pagination__item {
+      opacity: 0.7;
+      color: $black;
+      pointer-events: none;
+    }
   }
   &__list {
     display: flex;

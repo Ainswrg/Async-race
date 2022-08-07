@@ -30,6 +30,9 @@ class Car extends Component {
 
     const select = this.generateButton('Select', 'car__button--select');
     const remove = this.generateButton('Remove', 'car__button--remove');
+
+    Store.addToStore(`carSelect${id}`, select);
+    Store.addToStore(`carRemove${id}`, remove);
     const carTitle = document.createElement('h4');
 
     carTitle.classList.add('car__title');
@@ -101,7 +104,7 @@ class Car extends Component {
 
     const carWrapper = document.createElement('div');
     carWrapper.classList.add('car__wrapper');
-    const imgSvg = getCarImage(color);
+    const imgSvg: string = getCarImage(color);
 
     const car = document.createElement('div');
     car.classList.add('car__model');
