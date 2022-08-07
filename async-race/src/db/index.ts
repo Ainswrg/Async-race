@@ -54,7 +54,7 @@ class Database {
       method: Methods.DELETE,
     });
   };
-  startEngine = async (id: string, status: string) => {
+  startEngine = async (id: string, status: string): Promise<{ velocity: number; distance: number }> => {
     const response = await fetch(`${BASE}/${Endpoint.engine}?id=${id}&status=${status}`, {
       method: Methods.PATCH,
     });
@@ -66,8 +66,15 @@ class Database {
     });
     return response;
   };
-  getWinners = async (page: number | string, limit: number | string = 10): Promise<TGetCars> => {
-    const response = await fetch(`${BASE}/${Endpoint.winners}?_page=${page}&_limit=${limit}`);
+  getWinners = async (
+    page: number | string,
+    sort: string = '',
+    order: string = '',
+    limit: number | string = 10
+  ): Promise<TGetCars> => {
+    const response = await fetch(
+      `${BASE}/${Endpoint.winners}?_page=${page}&_limit=${limit}&_sort=${sort}&_order=${order}`
+    );
     return {
       items: await response.json(),
       total: response.headers.get('X-Total-Count'),

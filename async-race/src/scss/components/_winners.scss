@@ -23,13 +23,36 @@
       height: 100%;
       color: $black;
       text-decoration: none;
-      cursor: pointer;
-      &:hover {
-        color: $white;
+      font-weight: 600;
+      &-toggle {
+        cursor: pointer;
+        &:hover {
+          color: $white;
+        }
       }
       svg {
         width: 70px;
         height: 40px;
+      }
+      &-toggle.asc {
+        .winners__navigation-item {
+          &-up {
+            color: $white;
+          }
+          &-down {
+            color: $black;
+          }
+        }
+      }
+      &-toggle.desc {
+        .winners__navigation-item {
+          &-up {
+            color: $black;
+          }
+          &-down {
+            color: $white;
+          }
+        }
       }
     }
   }
