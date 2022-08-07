@@ -1,12 +1,11 @@
 import { ICar } from '@core/ts/interfaces';
-import { Endpoint, DefaultConst, Engine } from '@core/ts/enum';
+import { Endpoint, DefaultConst, Engine, Pagination, Event } from '@core/ts/enum';
 import Component from '@core/templates/component';
 import { Car, GeneratorCar } from '@core/components';
 import { TGetCars } from '@core/ts/types';
 import EventObserver from '@core/eventObserver';
 import Store from '@core/store';
 import Database from '@db/index';
-import getPaginationGenerator from '@helpers/paginate';
 
 interface IStateCar {
   id: number;
@@ -21,7 +20,7 @@ class Garage extends Component {
   event: EventObserver<unknown>;
   total: string;
   db: Database;
-  isPushRace: boolean;
+  isClickedRace: boolean;
 
   constructor(tagName: string, className: string, data: TGetCars) {
     super(tagName, className);
@@ -29,7 +28,7 @@ class Garage extends Component {
     this.total = this.data.total || DefaultConst.carsCount;
     this.event = new EventObserver();
     this.db = new Database();
-    this.isPushRace = false;
+    this.isClickedRace = false;
   }
   async getGeneratorCars(): Promise<HTMLElement> {
     const generator = new GeneratorCar('div', 'car-generator');
@@ -47,7 +46,7 @@ class Garage extends Component {
   generatePageTitle(): HTMLHeadingElement {
     const title = document.createElement('h2');
     title.classList.add('garage__page-title');
-    const currentPage = sessionStorage.getItem('currentPage') ?? DefaultConst.defaultPage;
+    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
     title.innerHTML = `Page #${currentPage}`;
     return title;
   }
@@ -67,99 +66,39 @@ class Garage extends Component {
     return cars;
   }
 
-  async generatePagination(): Promise<HTMLDivElement> {
-    const pagination = document.createElement('div');
-    pagination.classList.add('pagination');
-    Store.addToStore('pagination', pagination);
-    const paginationUl = document.createElement('ul');
-    paginationUl.classList.add('pagination__list');
-
-    await this.generatePaginationUl(paginationUl);
-
-    pagination.append(paginationUl);
-    return pagination;
-  }
-
-  async generatePaginationUl(paginationUl: HTMLUListElement): Promise<HTMLUListElement> {
-    const currentPage = sessionStorage.getItem('currentPage') ?? DefaultConst.defaultPage;
-    const data = await this.db.getCars(Endpoint.garage, currentPage);
-
-    const pages = Math.ceil(Number(data.total) / 7);
-    const pagesArray: (string | number)[] = getPaginationGenerator(currentPage, pages);
-
-    pagesArray.map((pageItem) => {
-      const paginationItem = document.createElement('li');
-      paginationItem.classList.add('pagination__item');
-      paginationItem.textContent = `${pageItem}`;
-      const id = Number(paginationItem.textContent);
-      paginationItem.id = `${id}`;
-
-      this.toggleActiveClass(paginationItem, id, currentPage);
-      this.togglePage(paginationItem);
-
-      return paginationUl.append(paginationItem);
-    });
-    return paginationUl;
-  }
-
-  togglePage(item: HTMLLIElement): void {
-    item.addEventListener('click', async () => {
-      const currentPageNumber = Number(item.id);
-      Store.setCurrentPage(currentPageNumber);
-
-      const event = Store.getFromEvent('event');
-      if (event === undefined) throw new Error('Event is undefined');
-      sessionStorage.setItem('currentPage', JSON.stringify(currentPageNumber));
-      event.notify('update');
-    });
-  }
-
-  toggleActiveClass = (paginationItem: HTMLLIElement, id: number, currentPage: string): void => {
-    if (id === Number(currentPage)) {
-      paginationItem.classList.add('pagination__item--active');
-    } else {
-      paginationItem.classList.remove('pagination__item--active');
-    }
-    if (paginationItem.textContent === '...') {
-      paginationItem.classList.add('pagination__item--disabled');
-    } else {
-      paginationItem.classList.remove('pagination__item--disabled');
-    }
-  };
-
   eventListener(): void {
     Store.addToEvent('event', this.event);
     this.event.subscribe(async (event) => {
-      const currentPage = sessionStorage.getItem('currentPage') ?? DefaultConst.defaultPage;
-      const dataCars = await this.db.getCars('garage', currentPage);
+      const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
+      const dataCars = await this.db.getCars(Endpoint.garage, currentPage);
       const currentId = Store.getCurrentId();
       switch (event) {
-        case 'update':
+        case Event.update:
           this.rerenderCars(dataCars);
           await this.rerenderInterface();
           await this.rerenderPagination();
           this.toggleUpdateButton('disable');
           break;
-        case 'updateCars':
+        case Event.updateCars:
           this.rerenderCars(dataCars);
           await this.rerenderPagination();
           break;
-        case 'updateInput':
+        case Event.select:
           await this.rerenderInterface();
           this.toggleUpdateButton('enable');
           break;
-        case 'race':
-          this.isPushRace = true;
+        case Event.race:
+          this.isClickedRace = true;
           await this.raceAllCar(dataCars.items);
           break;
-        case 'reset':
-          this.isPushRace = false;
+        case Event.reset:
+          this.isClickedRace = false;
           await this.resetAllCars(dataCars.items);
           break;
-        case 'start':
+        case Event.start:
           await this.startDrive(currentId, await this.db.startEngine(currentId, Engine.start));
           break;
-        case 'stop':
+        case Event.stop:
           await this.resetCarOnStartPosition(Number(this.getElement(`carState${currentId}`).id), currentId);
           break;
         default:
@@ -195,7 +134,7 @@ class Garage extends Component {
   }
 
   togglePaginationButtons(variant: string) {
-    const pagination = Store.getFromStore('pagination');
+    const pagination = Store.getFromStore(Pagination.garage);
     if (!pagination || !(pagination instanceof HTMLElement)) throw new Error('Pagination is not HTMLElement');
     if (variant === 'enable') {
       pagination.classList.remove('pagination--disabled');
@@ -242,7 +181,7 @@ class Garage extends Component {
         return false;
       })
     );
-    this.isPushRace = false;
+    this.isClickedRace = false;
     this.togglePaginationButtons('enable');
   }
 
@@ -269,11 +208,11 @@ class Garage extends Component {
   }
 
   async resetCarOnStartPosition(requestId: number, id: string) {
+    await this.db.startEngine(id, Engine.stop);
     const carModel = this.getElement(`carModel${id}`);
     if (!(carModel instanceof HTMLElement)) throw new Error('CarModel is not HTMLDivElement');
-    carModel.style.transform = 'translate(0px)';
     cancelAnimationFrame(requestId);
-    await this.db.startEngine(id, Engine.stop);
+    carModel.style.transform = 'translate(0px)';
     this.toggleAllButtons('enable', id);
   }
 
@@ -300,7 +239,7 @@ class Garage extends Component {
       }
       return response;
     });
-    if (!this.isPushRace) {
+    if (!this.isClickedRace) {
       this.togglePaginationButtons('enable');
     }
     return res;
@@ -362,7 +301,7 @@ class Garage extends Component {
   }
 
   async rerenderPagination(): Promise<void> {
-    const pagination = Store.getFromStore('pagination');
+    const pagination = Store.getFromStore(Pagination.garage);
     if (!pagination || !(pagination instanceof HTMLDivElement)) {
       throw new Error('Pagination container is not HTMLDivElement');
     }
@@ -370,7 +309,7 @@ class Garage extends Component {
     const paginationUl = document.createElement('ul');
     paginationUl.classList.add('pagination__list');
 
-    await this.generatePaginationUl(paginationUl);
+    await this.generatePaginationUl(paginationUl, Pagination.garage);
 
     pagination.append(paginationUl);
   }
@@ -389,7 +328,7 @@ class Garage extends Component {
     containerCar.append(title, pageTitle, cars);
     generatorCar.append(await this.getGeneratorCars());
 
-    this.container.append(generatorCar, containerCar, await this.generatePagination());
+    this.container.append(generatorCar, containerCar, await this.generatePagination(Pagination.garage));
     return {
       generatorCar,
       containerCar,

@@ -1,4 +1,4 @@
-import { Endpoint, DefaultConst } from '@core/ts/enum';
+import { Endpoint, DefaultConst, Pagination, Event } from '@core/ts/enum';
 import { ICar } from '@core/ts/interfaces';
 import Component from '@core/templates/component';
 import Database from '@db/index';
@@ -44,7 +44,7 @@ class GeneratorCar extends Component {
 
     create.button.addEventListener('click', async () => {
       await db.createCar(create.inputForTitle.value, create.inputForColor.value);
-      event.notify('update');
+      event.notify(Event.update);
     });
     return create.divInput;
   }
@@ -66,9 +66,9 @@ class GeneratorCar extends Component {
 
     update.button.addEventListener('click', async () => {
       await db.updateCar(update.inputForTitle.value, update.inputForColor.value, id.toString());
-      event.notify('update');
+      event.notify(Event.update);
     });
-    const currentPage = sessionStorage.getItem('currentPage') ?? DefaultConst.defaultPage;
+    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
     const cars = await db.getCars(Endpoint.garage, currentPage);
     cars.items.forEach((car) => {
       if (car.id === id) {
@@ -113,7 +113,7 @@ class GeneratorCar extends Component {
           await db.createCar(car.name, car.color);
         })
       )
-        .then(() => event.notify('updateCars'))
+        .then(() => event.notify(Event.updateCars))
         .catch((error) => error);
     });
   }

@@ -24,9 +24,33 @@ const enum Engine {
   drive = 'drive',
 }
 
+const enum Sort {
+  id = 'id',
+  wins = 'wins',
+  time = 'time',
+  ASC = 'ASC',
+  DESC = 'DESC',
+}
+
 const enum DefaultConst {
   carsCount = '4',
   defaultPage = '1',
 }
 
-export { PageIds, ErrorTypes, Url, Endpoint, Engine, DefaultConst };
+const enum Event {
+  update = 'update',
+  updateCars = 'update-cars',
+  select = 'select',
+  delete = 'delete',
+  start = 'start',
+  race = 'race',
+  reset = 'reset',
+  stop = 'stop',
+}
+
+const enum Pagination {
+  garage = 'paginationGarage',
+  winners = 'paginationWinners',
+}
+
+export { PageIds, ErrorTypes, Url, Endpoint, Engine, DefaultConst, Sort, Pagination, Event };

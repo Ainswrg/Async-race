@@ -5,6 +5,7 @@ import Database from '@db/index';
 import Store from '@core/store';
 import finish from '@assets/images/finish-flag.png';
 import getCarImage from '@helpers/getCarImage';
+import { Event } from '@core/ts/enum';
 
 class Car extends Component {
   event: EventObserver<unknown>;
@@ -46,23 +47,24 @@ class Car extends Component {
     const car: ICar = await this.db.getCar(id);
     if (!car) throw new Error('Car1 is undefined');
     switch (variant) {
-      case 'delete':
+      case Event.delete:
         await this.db.deleteCar(id);
-        event.notify('update');
+        await this.db.deleteWinner(id);
+        event.notify(Event.update);
         break;
-      case 'select': {
+      case Event.select: {
         Store.addToStore('car', car);
-        event.notify('updateInput');
+        event.notify(Event.select);
         break;
       }
-      case 'start': {
+      case Event.start: {
         Store.setCurrentId(id);
         Store.addToStore('car', car);
-        event.notify('start');
+        event.notify(Event.start);
         break;
       }
-      case 'stop': {
-        event.notify('stop');
+      case Event.stop: {
+        event.notify(Event.stop);
         break;
       }
       default:
