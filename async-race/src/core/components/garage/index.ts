@@ -1,5 +1,5 @@
 import { ICar } from '@core/ts/interfaces';
-import { Endpoint, DefaultConst, Engine, Pagination, Event } from '@core/ts/enum';
+import { Endpoint, DefaultConst, Engine, Pagination, Event, Code } from '@core/ts/enum';
 import Component from '@core/templates/component';
 import { Car, GeneratorCar } from '@core/components';
 import { TGetCars } from '@core/ts/types';
@@ -46,7 +46,7 @@ class Garage extends Component {
   generatePageTitle(): HTMLHeadingElement {
     const title = document.createElement('h2');
     title.classList.add('garage__page-title');
-    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
+    const currentPage = sessionStorage.getItem(`currentPage`) ?? DefaultConst.defaultPage;
     title.innerHTML = `Page #${currentPage}`;
     return title;
   }
@@ -66,10 +66,9 @@ class Garage extends Component {
     return cars;
   }
 
-  eventListener(): void {
+  eventListener(currentPage: string): void {
     Store.addToEvent('event', this.event);
     this.event.subscribe(async (event) => {
-      const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
       const dataCars = await this.db.getCars(Endpoint.garage, currentPage);
       const currentId = Store.getCurrentId();
       switch (event) {
@@ -89,7 +88,6 @@ class Garage extends Component {
           break;
         case Event.race:
           this.isClickedRace = true;
-          this.toggleRaceResetButtons('all');
           await this.raceAllCar(dataCars.items);
           break;
         case Event.reset:
@@ -97,9 +95,11 @@ class Garage extends Component {
           await this.resetAllCars(dataCars.items);
           break;
         case Event.start:
+          this.toggleRaceResetButtons('all');
           await this.startDrive(currentId, await this.db.startEngine(currentId, Engine.start));
           break;
         case Event.stop:
+          this.toggleRaceResetButtons('enable');
           await this.resetCarOnStartPosition(Number(this.getElement(`carState${currentId}`).id), currentId);
           break;
         default:
@@ -133,8 +133,15 @@ class Garage extends Component {
   toggleUpdateButton(variant: string) {
     const update = Store.getFromStore('updateInterface');
     if (!update || !(update instanceof HTMLElement)) throw new Error('Update input is not HTMLElement');
+    const updateInput = Store.getFromStore('updateTitle');
+    const updateColor = Store.getFromStore('updateColor');
+    if (!(updateColor instanceof HTMLInputElement)) throw new Error('UpdateColor is not HTMLInputElement');
+    if (!(updateInput instanceof HTMLInputElement)) throw new Error('UpdateInput is not HTMLInputElement');
     if (variant === 'enable') {
       update.classList.remove('car-generator__wrapper--disabled');
+      if (updateInput.value === '' && updateColor.value === '#000000') {
+        update.classList.add('car-generator__wrapper--disabled');
+      }
     }
     if (variant === 'disable') {
       update.classList.add('car-generator__wrapper--disabled');
@@ -149,17 +156,6 @@ class Garage extends Component {
     if (variant === 'disable') {
       create.classList.add('car-generator__wrapper--disabled');
     }
-  }
-
-  clearInputsInUpdate() {
-    const title = Store.getFromStore('updateTitle');
-    const color = Store.getFromStore('updateColor');
-
-    if (!title || !(title instanceof HTMLInputElement)) throw new Error('Title input is not HTMLInputElement');
-    if (!color || !(color instanceof HTMLInputElement)) throw new Error('Color input is not HTMLInputElement');
-
-    title.value = '';
-    color.value = '#000000';
   }
 
   togglePaginationButtons(variant: string) {
@@ -189,12 +185,12 @@ class Garage extends Component {
 
   async raceAllCar(cars: ICar[]) {
     let isNotFinished = true;
+    this.toggleRaceResetButtons('all');
     await Promise.all(
       cars.map(async (car) => {
         if (car.id === undefined) throw new Error('Car id is not defined');
         const carState = await this.db.startEngine(car.id, Engine.start);
         const state = await this.startDrive(car.id, carState);
-
         if (state?.finish && isNotFinished) {
           this.generateModal(car.name, state?.time);
           isNotFinished = false;
@@ -277,7 +273,6 @@ class Garage extends Component {
     if (!(carModel instanceof HTMLElement)) throw new Error('CarModel is not HTMLDivElement');
     carModel.style.transform = 'translate(0px)';
     this.toggleAllButtons('enable', id);
-    this.toggleRaceResetButtons('enable');
   }
 
   getElement(key: string) {
@@ -288,7 +283,6 @@ class Garage extends Component {
 
   async startDrive(id: string, carState: { velocity: number; distance: number }): Promise<IStateCar> {
     this.toggleAllButtons('disable', id);
-    this.toggleRaceResetButtons('all');
     const { velocity, distance } = carState;
     const carModel = this.getElement(`carModel${id}`);
     const carFinishLine = this.getElement(`carFinishLine${id}`);
@@ -299,7 +293,7 @@ class Garage extends Component {
     const res = this.animationCar(carModel, distanceWindow, time);
     Store.addToStore(`carState${id}`, res);
     await this.db.switchCarEngine(id, Engine.drive).then((response) => {
-      if (response.status !== 200) {
+      if (response.status !== Code.Success) {
         cancelAnimationFrame(res.id);
       }
       return response;
@@ -307,7 +301,6 @@ class Garage extends Component {
     if (!this.isClickedRace) {
       this.togglePaginationButtons('enable');
     }
-    this.toggleRaceResetButtons('disable');
     return res;
   }
 
@@ -376,7 +369,7 @@ class Garage extends Component {
     if (!updateColor || !(updateColor instanceof HTMLInputElement))
       throw new Error('UpdateColor is not HTMLDivElement');
 
-    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
+    const currentPage = sessionStorage.getItem(`currentPage`) ?? DefaultConst.defaultPage;
     const cars = await this.db.getCars(Endpoint.garage, currentPage);
     cars.items.forEach((car) => {
       if (car.id === id) {
@@ -384,8 +377,8 @@ class Garage extends Component {
         const valueColor = car.color ?? '#000000';
         updateColor.value = valueColor;
         updateTitle.value = valueTitle;
-        sessionStorage.setItem(`${Pagination.garage}updateTitle`, updateTitle.value);
-        sessionStorage.setItem(`${Pagination.garage}updateColor`, updateColor.value);
+        sessionStorage.setItem(`updateTitle`, updateTitle.value);
+        sessionStorage.setItem(`updateColor`, updateColor.value);
 
         Store.addToStore('car', car);
       }
@@ -428,7 +421,8 @@ class Garage extends Component {
   }
 
   async renderGarage(): Promise<HTMLElement> {
-    this.eventListener();
+    const currentPage = sessionStorage.getItem(`currentPage`) ?? DefaultConst.defaultPage;
+    this.eventListener(currentPage);
     const data = await this.appendAll(this.data, this.total);
     const { containerCar, generatorCar } = data;
     Store.addToStore('containerCar', containerCar);

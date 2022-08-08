@@ -48,9 +48,17 @@ const enum Event {
   stop = 'stop',
 }
 
+const enum Code {
+  Success = 200,
+  BadRequest = 400,
+  NotFound = 404,
+  TooManyRequest = 429,
+  InternalServerError = 500,
+}
+
 const enum Pagination {
   garage = 'paginationGarage',
   winners = 'paginationWinners',
 }
 
-export { PageIds, ErrorTypes, Url, Endpoint, Engine, DefaultConst, Sort, Pagination, Event };
+export { PageIds, ErrorTypes, Url, Endpoint, Engine, DefaultConst, Sort, Pagination, Event, Code };

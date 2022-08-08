@@ -51,6 +51,7 @@ class Car extends Component {
     if (!car) throw new Error('Car1 is undefined');
     switch (variant) {
       case Event.delete:
+        this.clearInputsInUpdate();
         await this.db.deleteCar(id);
         await this.db.deleteWinner(id);
         event.notify(Event.update);
@@ -72,6 +73,18 @@ class Car extends Component {
       }
       default:
     }
+  }
+
+  clearInputsInUpdate() {
+    const title = Store.getFromStore('updateTitle');
+    const color = Store.getFromStore('updateColor');
+    sessionStorage.removeItem('updateTitle');
+    sessionStorage.removeItem('updateColor');
+    if (!title || !(title instanceof HTMLInputElement)) throw new Error('Title input is not HTMLInputElement');
+    if (!color || !(color instanceof HTMLInputElement)) throw new Error('Color input is not HTMLInputElement');
+
+    title.value = '';
+    color.value = '#000000';
   }
 
   getElement(key: string) {
