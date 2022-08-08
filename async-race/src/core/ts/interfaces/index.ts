@@ -12,4 +12,10 @@ interface ICarRandomGenerate {
   generateOneHundredCars: () => ICar[];
 }
 
-export { ICar, ICarRandomGenerate };
+interface IPaginationGenerator {
+  getRange(start: number, end: number): number[];
+  clamp(number: number, lower: number, upper: number): number;
+  generate(): Array<string | number>;
+}
+
+export { ICar, ICarRandomGenerate, IPaginationGenerator };

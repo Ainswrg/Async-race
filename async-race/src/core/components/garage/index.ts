@@ -46,7 +46,7 @@ class Garage extends Component {
   generatePageTitle(): HTMLHeadingElement {
     const title = document.createElement('h2');
     title.classList.add('garage__page-title');
-    const currentPage = sessionStorage.getItem(`currentPage`) ?? DefaultConst.defaultPage;
+    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
     title.innerHTML = `Page #${currentPage}`;
     return title;
   }
@@ -66,17 +66,15 @@ class Garage extends Component {
     return cars;
   }
 
-  eventListener(currentPage: string): void {
+  eventListener(): void {
     Store.addToEvent('event', this.event);
     this.event.subscribe(async (event) => {
+      const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
       const dataCars = await this.db.getCars(Endpoint.garage, currentPage);
       const currentId = Store.getCurrentId();
       switch (event) {
         case Event.update:
-          this.rerenderCars(dataCars);
-          await this.rerenderInterface();
-          await this.rerenderPagination();
-          this.toggleUpdateButton('disable');
+          await this.update(dataCars);
           break;
         case Event.updateCars:
           this.rerenderCars(dataCars);
@@ -106,6 +104,13 @@ class Garage extends Component {
       }
     });
   }
+
+  update = async (dataCars: TGetCars) => {
+    this.rerenderCars(dataCars);
+    await this.rerenderInterface();
+    await this.rerenderPagination();
+    this.toggleUpdateButton('disable');
+  };
 
   toggleCarButtons(id: string, variant: string): void {
     const select = this.getElement(`carSelect${id}`);
@@ -369,7 +374,7 @@ class Garage extends Component {
     if (!updateColor || !(updateColor instanceof HTMLInputElement))
       throw new Error('UpdateColor is not HTMLDivElement');
 
-    const currentPage = sessionStorage.getItem(`currentPage`) ?? DefaultConst.defaultPage;
+    const currentPage = sessionStorage.getItem(`${Pagination.garage}currentPage`) ?? DefaultConst.defaultPage;
     const cars = await this.db.getCars(Endpoint.garage, currentPage);
     cars.items.forEach((car) => {
       if (car.id === id) {
@@ -421,8 +426,7 @@ class Garage extends Component {
   }
 
   async renderGarage(): Promise<HTMLElement> {
-    const currentPage = sessionStorage.getItem(`currentPage`) ?? DefaultConst.defaultPage;
-    this.eventListener(currentPage);
+    this.eventListener();
     const data = await this.appendAll(this.data, this.total);
     const { containerCar, generatorCar } = data;
     Store.addToStore('containerCar', containerCar);

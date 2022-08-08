@@ -1,12 +1,12 @@
 import { TGetCars } from '@core/ts/types';
 import Database from '@db/index';
-import getPaginationGenerator from '@helpers/paginate';
+import PaginationGenerator from '@helpers/paginate';
 import { DefaultConst, Endpoint, Event, Pagination } from '@core/ts/enum';
 import Store from '@core/store';
+import { IPaginationGenerator } from '@core/ts/interfaces';
 
 class Component {
   protected container: HTMLElement;
-
   constructor(tagName: string, className: string) {
     this.container = document.createElement(tagName);
     this.container.className = className;
@@ -44,7 +44,8 @@ class Component {
     }
     if (!data) throw new Error('Data is undefined');
     const pages = Math.ceil(Number(data.total) / maxPage);
-    const pagesArray: (string | number)[] = getPaginationGenerator(currentPage, pages);
+    const pagination: IPaginationGenerator = new PaginationGenerator(currentPage, pages);
+    const pagesArray: (string | number)[] = pagination.generate();
 
     pagesArray.map((pageItem) => {
       const paginationItem = document.createElement('li');
