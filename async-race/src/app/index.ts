@@ -1,7 +1,8 @@
 import Page from '@core/templates/page';
-import { ErrorTypes, PageIds } from '@core/ts/enum';
+import { ErrorTypes, Event, PageIds } from '@core/ts/enum';
 import { Main, Header, Footer } from '@core/layouts';
 import { GaragePage, WinnersPage, ErrorPage } from '@pages/index';
+import Store from '@core/store';
 
 class App {
   private static body: HTMLElement = document.body;
@@ -15,16 +16,21 @@ class App {
       App.url = null;
     }
     let page: Page | null = null;
-
     switch (idPage) {
       case PageIds.Garage:
         page = new GaragePage(idPage);
         App.url = idPage;
         break;
-      case PageIds.Winners:
+      case PageIds.Winners: {
         page = new WinnersPage(idPage);
         App.url = idPage;
+        const event = Store.getFromEvent('event');
+        if (!event) throw new Error('Event is undefined');
+        if (Store.getIsClickedRace()) {
+          event.notify(Event.reset);
+        }
         break;
+      }
       default:
         page = new ErrorPage(idPage, ErrorTypes.Error_404);
         App.url = idPage;

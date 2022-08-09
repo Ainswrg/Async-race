@@ -63,6 +63,12 @@ body {
         border: 2px solid $primary;
       }
     }
+    .nav-button--disabled {
+      color: $buttonDisabled;
+      background-color: $buttonBackgroundDisabled;
+      border: 2px solid $buttonDisabled;
+      pointer-events: none;
+    }
   }
 }
 

@@ -12,6 +12,15 @@ class Store {
   static store: Map<string, TStore> = new Map();
   static currentPage: number = 1;
   static currentId: string = '1';
+  static isClickedRace: boolean = false;
+
+  static setIsClickedRace(isClickedRace: boolean): void {
+    Store.isClickedRace = isClickedRace;
+  }
+
+  static getIsClickedRace(): boolean {
+    return Store.isClickedRace;
+  }
 
   static getCurrentId(): string {
     return Store.currentId;

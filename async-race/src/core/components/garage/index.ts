@@ -1,5 +1,5 @@
 import { ICar } from '@core/ts/interfaces';
-import { Endpoint, DefaultConst, Engine, Pagination, Event, Code } from '@core/ts/enum';
+import { Endpoint, DefaultConst, Engine, Pagination, Event, Code, PageIds } from '@core/ts/enum';
 import Component from '@core/templates/component';
 import { Car, GeneratorCar } from '@core/components';
 import { TGetCars } from '@core/ts/types';
@@ -20,7 +20,6 @@ class Garage extends Component {
   event: EventObserver<unknown>;
   total: string;
   db: Database;
-  isClickedRace: boolean;
 
   constructor(tagName: string, className: string, data: TGetCars) {
     super(tagName, className);
@@ -28,7 +27,6 @@ class Garage extends Component {
     this.total = this.data.total || DefaultConst.carsCount;
     this.event = new EventObserver();
     this.db = new Database();
-    this.isClickedRace = false;
   }
   async getGeneratorCars(): Promise<HTMLElement> {
     const generator = new GeneratorCar('div', 'car-generator');
@@ -85,11 +83,11 @@ class Garage extends Component {
           this.toggleUpdateButton('enable');
           break;
         case Event.race:
-          this.isClickedRace = true;
+          Store.setIsClickedRace(true);
           await this.raceAllCar(dataCars.items);
           break;
         case Event.reset:
-          this.isClickedRace = false;
+          Store.setIsClickedRace(false);
           await this.resetAllCars(dataCars.items);
           break;
         case Event.start:
@@ -188,9 +186,22 @@ class Garage extends Component {
     }
   }
 
+  togglePageButtons(variant: string) {
+    const navButtonWinner = Store.getFromStore(`navButton${PageIds.Winners}`);
+    if (!navButtonWinner) throw new Error('NavButtonWinner is undefined');
+    if (!(navButtonWinner instanceof HTMLAnchorElement)) throw new Error('NavButtonWinner is not HTMLAnchorElement');
+    if (variant === 'enable') {
+      navButtonWinner.classList.remove('nav-button--disabled');
+    }
+    if (variant === 'disable') {
+      navButtonWinner.classList.add('nav-button--disabled');
+    }
+  }
+
   async raceAllCar(cars: ICar[]) {
     let isNotFinished = true;
     this.toggleRaceResetButtons('all');
+    this.togglePageButtons('disable');
     await Promise.all(
       cars.map(async (car) => {
         if (car.id === undefined) throw new Error('Car id is not defined');
@@ -211,11 +222,12 @@ class Garage extends Component {
             await this.db.createWinner(Number(car.id), 1, time);
           }
           this.toggleRaceResetButtons('disable');
+          this.togglePageButtons('enable');
         }
         return false;
       })
     );
-    this.isClickedRace = false;
+    Store.setIsClickedRace(false);
     this.togglePaginationButtons('enable');
   }
 
@@ -298,12 +310,12 @@ class Garage extends Component {
     const res = this.animationCar(carModel, distanceWindow, time);
     Store.addToStore(`carState${id}`, res);
     await this.db.switchCarEngine(id, Engine.drive).then((response) => {
-      if (response.status !== Code.Success) {
+      if (response.status === Code.InternalServerError) {
         cancelAnimationFrame(res.id);
       }
       return response;
     });
-    if (!this.isClickedRace) {
+    if (!Store.getIsClickedRace()) {
       this.togglePaginationButtons('enable');
     }
     return res;
