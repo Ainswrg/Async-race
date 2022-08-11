@@ -85,6 +85,7 @@ class Garage extends Component {
         case Event.race:
           Store.setIsClickedRace(true);
           await this.raceAllCar(dataCars.items);
+          this.toggleButtons('enable');
           break;
         case Event.reset:
           Store.setIsClickedRace(false);
@@ -186,6 +187,20 @@ class Garage extends Component {
     }
   }
 
+  toggleButtons(variant: string) {
+    if (variant === 'enable') {
+      this.togglePaginationButtons('enable');
+      this.toggleUpdateButton('enable');
+      this.toggleCreateButton('enable');
+      this.toggleRaceResetButtons('disable');
+      this.togglePageButtons('enable');
+    } else {
+      this.toggleUpdateButton('disable');
+      this.togglePaginationButtons('disable');
+      this.toggleCreateButton('disable');
+    }
+  }
+
   togglePageButtons(variant: string) {
     const navButtonWinner = Store.getFromStore(`navButton${PageIds.Winners}`);
     if (!navButtonWinner) throw new Error('NavButtonWinner is undefined');
@@ -198,6 +213,7 @@ class Garage extends Component {
     }
   }
 
+  // eslint-disable-next-line max-lines-per-function
   async raceAllCar(cars: ICar[]) {
     let isNotFinished = true;
     this.toggleRaceResetButtons('all');
@@ -206,29 +222,37 @@ class Garage extends Component {
       cars.map(async (car) => {
         if (car.id === undefined) throw new Error('Car id is not defined');
         const carState = await this.db.startEngine(car.id, Engine.start);
-        const state = await this.startDrive(car.id, carState);
-        if (state?.finish && isNotFinished) {
+        const stateCar = car;
+        stateCar.state = carState;
+      })
+    ).then(() => {
+      cars.forEach(async (car) => {
+        if (car.id === undefined) throw new Error('Car id is not defined');
+        const state = await this.startDrive(car.id, car.state);
+        const isFinished = sessionStorage.getItem(`isDone${car.id}`);
+        const stop = sessionStorage.getItem(`broken${car.id}`);
+        if (isFinished && isNotFinished && stop !== 'broken') {
           this.generateModal(car.name, state?.time);
           isNotFinished = false;
           const time = Number((state.time / 1000).toFixed(2));
           const curCar = await this.db.getWinner(car.id);
           if (curCar.id) {
-            if (!curCar.wins) throw new Error('Car wins is not defined');
-            if (!curCar.time) throw new Error('Car time is not defined');
+            if (!curCar.wins || curCar.time === undefined) throw new Error('Car wins or time is not defined');
             const winsCount = curCar.wins + 1;
-            const lessesTime = curCar.time > time ? time : curCar.time;
+            const carTime = curCar.time === 0 ? 2.55 : curCar.time;
+            const lessesTime = carTime > time ? time : carTime;
             await this.db.updateWinner(curCar.id, { wins: winsCount, time: lessesTime });
           } else {
             await this.db.createWinner(Number(car.id), 1, time);
           }
-          this.toggleRaceResetButtons('disable');
           this.togglePageButtons('enable');
         }
+        sessionStorage.removeItem(`broken${car.id}`);
         return false;
-      })
-    );
-    Store.setIsClickedRace(false);
-    this.togglePaginationButtons('enable');
+      });
+      Store.setIsClickedRace(false);
+      this.togglePaginationButtons('enable');
+    });
   }
 
   async resetAllCars(cars: ICar[]): Promise<PromiseSettledResult<void>[]> {
@@ -257,7 +281,7 @@ class Garage extends Component {
     if (variant === 'disable') {
       race.classList.add('car-generator__button--disabled');
       reset.classList.remove('car-generator__button--disabled');
-      generateCars.classList.add('car-generator__button--disabled');
+      generateCars.classList.remove('car-generator__button--disabled');
     }
     if (variant === 'all') {
       race.classList.add('car-generator__button--disabled');
@@ -298,8 +322,9 @@ class Garage extends Component {
     return value;
   }
 
-  async startDrive(id: string, carState: { velocity: number; distance: number }): Promise<IStateCar> {
+  async startDrive(id: string, carState: { velocity: number; distance: number } | undefined): Promise<IStateCar> {
     this.toggleAllButtons('disable', id);
+    if (!carState) throw new Error('CarState is undefined');
     const { velocity, distance } = carState;
     const carModel = this.getElement(`carModel${id}`);
     const carFinishLine = this.getElement(`carFinishLine${id}`);
@@ -307,11 +332,12 @@ class Garage extends Component {
     if (!(carFinishLine instanceof HTMLImageElement)) throw new Error('CarFinishLine is not HTMLDivElement');
     const time = distance / velocity;
     const distanceWindow = this.getDistanceBetweenElements(carModel, carFinishLine);
-    const res = this.animationCar(carModel, distanceWindow, time);
+    const res = this.animationCar(carModel, distanceWindow, time, id);
     Store.addToStore(`carState${id}`, res);
     await this.db.switchCarEngine(id, Engine.drive).then((response) => {
-      if (response.status === Code.InternalServerError) {
+      if (response.status === Code.InternalServerError || response.status === Code.NotFound) {
         cancelAnimationFrame(res.id);
+        sessionStorage.setItem(`broken${id}`, 'broken');
       }
       return response;
     });
@@ -327,7 +353,7 @@ class Garage extends Component {
     return Math.abs(rect1.left - rect2.left) + 20;
   };
 
-  animationCar(car: HTMLElement, distance: number, animationTime: number) {
+  animationCar(car: HTMLElement, distance: number, animationTime: number, id: string) {
     let start: null | number = null;
     const res: IStateCar = {
       id: 0,
@@ -335,19 +361,19 @@ class Garage extends Component {
     };
     function step(timeStep: number) {
       if (!start) start = timeStep;
+      const currentCar = car;
       const time = timeStep - start;
       const passed = Math.round(time * (distance / animationTime));
-      const currentCar = car;
       currentCar.style.transform = `translate(${Math.min(passed, distance)}px)`;
       res.distance = passed;
       if (passed < distance) {
         res.id = requestAnimationFrame(step);
       } else {
         res.finish = true;
+        sessionStorage.setItem(`isDone${id}`, JSON.stringify(true));
       }
       res.time = time;
     }
-
     res.finish = false;
     res.id = requestAnimationFrame(step);
     return res;

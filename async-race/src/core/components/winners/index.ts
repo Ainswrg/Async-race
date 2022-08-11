@@ -176,7 +176,7 @@ class Winners extends Component {
       const sort = sessionStorage.getItem('sort') ?? '';
       const orderWins = sessionStorage.getItem('orderWins') ?? Sort.DESC;
       const orderTime = sessionStorage.getItem('orderTime') ?? Sort.DESC;
-      if (!sort) throw new Error('Sort is undefined');
+      if (sort === undefined) throw new Error('Sort is undefined');
       const order = sort === 'wins' ? orderWins : orderTime;
       const dataCars = await this.db.getWinners(currentPage, sort, order);
       switch (event) {

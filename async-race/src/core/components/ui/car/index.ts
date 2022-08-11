@@ -68,6 +68,7 @@ class Car extends Component {
         break;
       }
       case Event.stop: {
+        Store.setCurrentId(id);
         event.notify(Event.stop);
         break;
       }
