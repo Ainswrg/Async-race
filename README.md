@@ -1,5 +1,5 @@
 # Async-Race
-## [A link to deployed application is here](https://rolling-scopes-school.github.io/ainswrg-JSFE2022Q1/async-race/)
+## [A link to deployed application is here](https://ainswrg.github.io/Async-race)
 ## Stack
    - TypeScript
    - SASS
