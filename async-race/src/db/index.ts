@@ -2,7 +2,7 @@ import { ICar } from '@core/ts/interfaces';
 import { Endpoint } from '@core/ts/enum';
 import type { TGetCars } from '@core/ts/types';
 
-const BASE = 'http://127.0.0.1:3000';
+const BASE = 'https://my-async-race.herokuapp.com';
 const enum Methods {
   GET = 'GET',
   POST = 'POST',

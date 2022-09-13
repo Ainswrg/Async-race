@@ -13,9 +13,30 @@ class ErrorPage extends Page {
     this.errorType = errorType;
   }
 
+  generateBodyContent(): void {
+    const wrapper = document.createElement('div');
+    wrapper.classList.add('page-error-wrapper');
+    const center = document.createElement('div');
+    center.classList.add('center');
+    const title = document.createElement('h1');
+    title.id = 'word';
+
+    const word = 'Error! The page was not found.';
+    const wordArray = word.split('');
+    wordArray.forEach((letter, index) => {
+      const span = document.createElement('span');
+      span.innerHTML = letter;
+      span.classList.add('letter');
+      span.classList.add(`letter-${index}`);
+      title.append(span);
+    });
+    center.append(title);
+    wrapper.append(center);
+    this.container.append(wrapper);
+  }
+
   async render(): Promise<HTMLElement> {
-    const title = this.createHeaderTitle(ErrorPage.TextObject[this.errorType]);
-    this.container.append(title);
+    this.generateBodyContent();
     return this.container;
   }
 }
