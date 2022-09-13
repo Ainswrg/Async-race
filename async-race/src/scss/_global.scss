@@ -1,0 +1,121 @@
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+.page-wrapper {
+  min-height: 100%;
+  height: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background-color: $background;
+  padding: 20px;
+  text-align: center;
+
+  &__navigation {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    &-icon {
+      display: flex;
+      font-size: 1.5rem;
+      width: 40px;
+      color: $white;
+      cursor: pointer;
+    }
+    &-quantity {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background-color: $white;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: $background;
+      margin-right: 10px;
+    }
+    a {
+      color: $white;
+      text-decoration: none;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-right: 20px;
+      width: 150px;
+      height: fit-content;
+      background-color: $buttonBackground;
+      border: 2px solid #fff;
+      &:hover {
+        color: $primary;
+        background-color: $buttonBackgroundHover;
+        border: 2px solid $primary;
+      }
+    }
+    .nav-button--disabled {
+      color: $buttonDisabled;
+      background-color: $buttonBackgroundDisabled;
+      border: 2px solid $buttonDisabled;
+      pointer-events: none;
+    }
+  }
+}
+
+.main {
+  flex: 1 1 auto;
+}
+
+.footer {
+  background-color: $background;
+  padding: 20px;
+  text-align: center;
+
+  &__contacts {
+    display: flex;
+    align-items: center;
+    &-item {
+      display: flex;
+      width: 100%;
+      justify-content: space-between;
+      align-items: center;
+      a {
+        color: #322e37;
+        text-decoration: none;
+        font-size: 1.1rem;
+        font-weight: bold;
+        padding: 10px;
+        &:hover {
+          color: $white;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+        .logo {
+          width: 80px;
+          height: 25px;
+          &:hover {
+            mix-blend-mode: color-burn;
+          }
+        }
+      }
+    }
+  }
+}
+
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
